@@ -11,6 +11,7 @@ const client = new Client({
 const openai = require('openai')
 const openai_key = process.env.OPENAI_KEY
 const discord_key = process.env.DISCORD_KEY
+print(discord_key)
 const prefix = '|' // define your prefix here
 const { ask } = require('./ai')
 // const fs = require('fs')
