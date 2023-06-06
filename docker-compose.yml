@@ -4,7 +4,4 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    environment:
-      - DISCORD_KEY=BOT_TOKEN
-      - OPENAI_KEY=AI_KEY
     restart: always
