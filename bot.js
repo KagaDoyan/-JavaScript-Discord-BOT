@@ -51,6 +51,65 @@ client.on('ready', async () => {
   // })
 })
 
+client.on('message', (interaction) => {
+  if (interaction.author.bot) return; // Ignore messages from other bots
+  if (!interaction.content.startsWith('/')) return; // Ignore messages that don't start with '!'
+
+  const args = interaction.content.slice(1).trim().split(' ');
+  const command = args.shift().toLowerCase();
+
+  if (command === 'ojou') {
+    try {
+      await interaction.reply(`Let me think, I will answer you soon!`)
+
+      //set user ID that send msg
+      const userId = interaction.user.id
+
+      //set question to ask ai
+      let prompt = interaction.options.get('question').value
+      console.log('Question: '+ prompt)
+
+      //push question to previous talking
+      const checkUser = previousResponse.find(obj => obj.userId === userId)
+      if(checkUser){
+        checkUser.msg.push({ role: 'user', content: prompt })
+      }else{
+        previousResponse.push({ userId: userId, msg: [{ role: 'user', content: prompt }] })
+      }
+
+      //fliter context to ask ai by user ID
+      let context = previousResponse.filter((res) => {
+        return res.userId === userId
+      }).map((selected) => selected.msg)
+
+      //using chat gpt and send answer
+      const answer = await ask(context[0])
+      let answerObj = JSON.parse(JSON.stringify(answer))
+      await interaction.channel.send(`<@${userId}>\nQuestion:\n> ${prompt}\nAnswer:\n> ${answerObj.content}`)
+      await interaction.deleteReply()
+      // const embed = new EmbedBuilder()
+      //   .setColor(0xFF0099)
+      //   .setTitle(prompt)
+      //   .setDescription(answerObj.content)
+      // interaction.reply({ embeds: [embed] });
+
+      //push answer to previous talking to continue talk
+      if(checkUser){
+        checkUser.msg.push({ role: 'assistant', content: answerObj.content })
+      }else{
+        let pvRes = previousResponse.find(obj => obj.userId === userId)
+        pvRes.msg.push({ role: 'assistant', content: answerObj.content })
+      }
+      console.log('Answer: '+ answerObj.content)
+    } catch (error) {
+      console.log(error)
+      await interaction.channel.send(`<@${userId}>\nQuestion:\n> ${prompt}\nAnswer:\n> Sorry I got error can't answer that`)
+      // await interaction.channel.send(`\n-------<@${userId}> Question-------\n`+ prompt +`\n-------Answer-------\nSorry I got error can't answer that`)
+      await interaction.deleteReply()
+    }
+  }
+});
+
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
 
