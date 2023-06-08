@@ -11,10 +11,7 @@ const client = new Client({
 const openai = require('openai')
 const openai_key = process.env.OPENAI_KEY
 const discord_key = process.env.DISCORD_KEY
-console.log("ENV HERE");
-console.log(discord_key);
-console.log("ENV END");
-const prefix = '|' // define your prefix here
+const prefix = '/' // define your prefix here
 const { ask } = require('./ai')
 // const fs = require('fs')
 // const path = require('path')
@@ -50,65 +47,6 @@ client.on('ready', async () => {
   //   console.log('Clear Previouse Respone')
   // })
 })
-
-client.on('message', (interaction) => {
-  if (interaction.author.bot) return; // Ignore messages from other bots
-  if (!interaction.content.startsWith('/')) return; // Ignore messages that don't start with '!'
-
-  const args = interaction.content.slice(1).trim().split(' ');
-  const command = args.shift().toLowerCase();
-
-  if (command === 'ojou') {
-    try {
-      await interaction.reply(`Let me think, I will answer you soon!`)
-
-      //set user ID that send msg
-      const userId = interaction.user.id
-
-      //set question to ask ai
-      let prompt = interaction.options.get('question').value
-      console.log('Question: '+ prompt)
-
-      //push question to previous talking
-      const checkUser = previousResponse.find(obj => obj.userId === userId)
-      if(checkUser){
-        checkUser.msg.push({ role: 'user', content: prompt })
-      }else{
-        previousResponse.push({ userId: userId, msg: [{ role: 'user', content: prompt }] })
-      }
-
-      //fliter context to ask ai by user ID
-      let context = previousResponse.filter((res) => {
-        return res.userId === userId
-      }).map((selected) => selected.msg)
-
-      //using chat gpt and send answer
-      const answer = await ask(context[0])
-      let answerObj = JSON.parse(JSON.stringify(answer))
-      await interaction.channel.send(`<@${userId}>\nQuestion:\n> ${prompt}\nAnswer:\n> ${answerObj.content}`)
-      await interaction.deleteReply()
-      // const embed = new EmbedBuilder()
-      //   .setColor(0xFF0099)
-      //   .setTitle(prompt)
-      //   .setDescription(answerObj.content)
-      // interaction.reply({ embeds: [embed] });
-
-      //push answer to previous talking to continue talk
-      if(checkUser){
-        checkUser.msg.push({ role: 'assistant', content: answerObj.content })
-      }else{
-        let pvRes = previousResponse.find(obj => obj.userId === userId)
-        pvRes.msg.push({ role: 'assistant', content: answerObj.content })
-      }
-      console.log('Answer: '+ answerObj.content)
-    } catch (error) {
-      console.log(error)
-      await interaction.channel.send(`<@${userId}>\nQuestion:\n> ${prompt}\nAnswer:\n> Sorry I got error can't answer that`)
-      // await interaction.channel.send(`\n-------<@${userId}> Question-------\n`+ prompt +`\n-------Answer-------\nSorry I got error can't answer that`)
-      await interaction.deleteReply()
-    }
-  }
-});
 
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return
@@ -244,99 +182,99 @@ client.on('interactionCreate', async (interaction) => {
   }
 })
 
-// client.on('messageCreate', async (message) => {
-//   try {
-//     //check if it's prefix for this bot
-//     if (!message.content.startsWith(prefix) || message.author.bot) return
+client.on('messageCreate', async (message) => {
+  try {
+    //check if it's prefix for this bot
+    if (!message.content.startsWith(prefix) || message.author.bot) return
     
-//     //get command text
-//     const args = message.content.slice(prefix.length).trim().split(/ +/)
-//     const command = args.shift().toLowerCase()
+    //get command text
+    const args = message.content.slice(prefix.length).trim().split(/ +/)
+    const command = args.shift().toLowerCase()
 
-//     if(command === 'ping'){
-//       console.log('pong')
-//       await message.channel.send('Pong!')
-//     }
+    // if(command === 'ping'){
+    //   console.log('pong')
+    //   await message.channel.send('Pong!')
+    // }
 
-//     if(command === 'eiwww'){
-//       console.log('Fak You')
-//       await message.channel.send(`Fak U <@${message.author.id}>`)
-//     }
+    // if(command === 'eiwww'){
+    //   console.log('Fak You')
+    //   await message.channel.send(`Fak U <@${message.author.id}>`)
+    // }
 
-//     if(command === 'ojou'){
-//       //ignore if it's a bot
-//       if(message.author.bot) return
+    if(command === 'ojou'){
+      //ignore if it's a bot
+      if(message.author.bot) return
 
-//       await message.channel.send(`Let me think, I will answer you soon!`).then(async (sentMessage) => {
-//         // setTimeout(() => {
-//         //   // Delete the message
-//         //   sentMessage.delete();
-//         // }, 20000);
-//         // sentMessage.delete({timeout:"10000"})
-//         //set user ID that send msg
-//         const userId = message.author.id
+      await message.channel.send(`Let me think, I will answer you soon!`).then(async (sentMessage) => {
+        // setTimeout(() => {
+        //   // Delete the message
+        //   sentMessage.delete();
+        // }, 20000);
+        // sentMessage.delete({timeout:"10000"})
+        //set user ID that send msg
+        const userId = message.author.id
 
-//         //set question to ask ai
-//         let prompt = message.content.substring(6)
-//         console.log('Question: '+ prompt)
+        //set question to ask ai
+        let prompt = message.content.substring(6)
+        console.log('Question: '+ prompt)
 
-//         //push question to previous talking
-//         const checkUser = previousResponse.find(obj => obj.userId === userId)
-//         if(checkUser){
-//           checkUser.msg.push({ role: 'user', content: prompt })
-//         }else{
-//           previousResponse.push({ userId: message.author.id, msg: [{ role: 'user', content: prompt }] })
-//         }
+        //push question to previous talking
+        const checkUser = previousResponse.find(obj => obj.userId === userId)
+        if(checkUser){
+          checkUser.msg.push({ role: 'user', content: prompt })
+        }else{
+          previousResponse.push({ userId: message.author.id, msg: [{ role: 'user', content: prompt }] })
+        }
 
-//         //fliter context to ask ai by user ID
-//         let context = previousResponse.filter((res) => {
-//           return res.userId === userId
-//         }).map((selected) => selected.msg)
+        //fliter context to ask ai by user ID
+        let context = previousResponse.filter((res) => {
+          return res.userId === userId
+        }).map((selected) => selected.msg)
 
-//         //using chat gpt and send answer
-//         const answer = await ask(context[0])
-//         let answerObj = JSON.parse(JSON.stringify(answer))
-//         await sentMessage.edit(`<@${message.author.id}>\n` + answerObj.content)
+        //using chat gpt and send answer
+        const answer = await ask(context[0])
+        let answerObj = JSON.parse(JSON.stringify(answer))
+        await sentMessage.edit(`<@${message.author.id}>\n` + answerObj.content)
 
-//         //push answer to previous talking to continue talk
-//         if(checkUser){
-//           checkUser.msg.push({ role: 'assistant', content: answerObj.content })
-//         }else{
-//           let pvRes = previousResponse.find(obj => obj.userId === userId)
-//           pvRes.msg.push({ role: 'assistant', content: answerObj.content })
-//         }
-//         console.log('Answer: '+ answerObj.content)
-//       }).catch(() => {
+        //push answer to previous talking to continue talk
+        if(checkUser){
+          checkUser.msg.push({ role: 'assistant', content: answerObj.content })
+        }else{
+          let pvRes = previousResponse.find(obj => obj.userId === userId)
+          pvRes.msg.push({ role: 'assistant', content: answerObj.content })
+        }
+        console.log('Answer: '+ answerObj.content)
+      }).catch(() => {
 
-//       })
-//     }
+      })
+    }
 
-//     if(command === "thx"){
-//       //ignore if it's a bot
-//       if(message.author.bot) return
+    // if(command === "thx"){
+    //   //ignore if it's a bot
+    //   if(message.author.bot) return
 
-//       //set user ID that send msg
-//       const userId = message.author.id
+    //   //set user ID that send msg
+    //   const userId = message.author.id
 
-//       previousResponse = previousResponse.filter(item => item.userId !== userId)
+    //   previousResponse = previousResponse.filter(item => item.userId !== userId)
 
-//       await message.channel.send("https://tenor.com/view/nakiriayame-ayame-ayamelfr-lfrhahaha-gif-19358266")
-//       await message.channel.send("you are very welcome! Ask away! if you need anything else")
-//     }
+    //   await message.channel.send("https://tenor.com/view/nakiriayame-ayame-ayamelfr-lfrhahaha-gif-19358266")
+    //   await message.channel.send("you are very welcome! Ask away! if you need anything else")
+    // }
 
-//     if(command === "forget"){
-//       //ignore if it's a bot
-//       if(message.author.bot) return
+    // if(command === "forget"){
+    //   //ignore if it's a bot
+    //   if(message.author.bot) return
 
-//       previousResponse = []
+    //   previousResponse = []
 
-//       await message.channel.send("https://media.tenor.com/kE-l_OaKS4MAAAAd/ayame-confused.gif")
-//       await message.channel.send("my memories is fading what was the question again?")
-//     }
-//   } catch (error) {
-//     console.log(error)
-//     await message.channel.send(`I'm Broken Sorry Can't Answer That <@${message.author.id}>`)
-//   }
-// })
+    //   await message.channel.send("https://media.tenor.com/kE-l_OaKS4MAAAAd/ayame-confused.gif")
+    //   await message.channel.send("my memories is fading what was the question again?")
+    // }
+  } catch (error) {
+    console.log(error)
+    await message.channel.send(`I'm Broken Sorry Can't Answer That <@${message.author.id}>`)
+  }
+})
 
 client.login(discord_key)
